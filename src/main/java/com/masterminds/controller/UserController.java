@@ -9,12 +9,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.masterminds.dto.UserDTO;
 import com.masterminds.entity.User;
 import com.masterminds.service.UserService;
 
@@ -43,6 +45,13 @@ public class UserController {
 		// In a real app, you might send an invite SMS here via Fast2SMS
 		User newUser = userService.saveContact(contactRequest);
 		return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
+	}
+	
+	@GetMapping("/{id}")
+	public ResponseEntity<UserDTO> getUser(@PathVariable UUID id) {
+	    UserDTO dto = userService.getUser(id);
+	    
+	    return ResponseEntity.ok(dto);
 	}
 
 }

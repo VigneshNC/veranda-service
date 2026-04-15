@@ -31,44 +31,35 @@ import lombok.Setter;
 public class User {
 
 	@Id
-    @GeneratedValue(generator = "UUID")
+	@GeneratedValue(generator = "UUID")
 	@UuidGenerator
-    @Column(name = "id", updatable = false, nullable = false)
-    private UUID id;
-	
-    @Column(unique = true, nullable = false, length = 15)
-    private String phoneNumber;
+	@Column(name = "id", updatable = false, nullable = false)
+	private UUID id;
 
-    @Column(length = 100)
-    private String displayName;
+	@Column(unique = true, nullable = false, length = 15)
+	private String phoneNumber;
 
-    private String profileImageUrl;
+	@Column(length = 100)
+	private String displayName;
 
-    // OTP Logic
-    private String currentOtp;
-    
-//  @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "Asia/India", pattern = "dd/MM/yyyy HH:mm:ss")
-    private LocalDateTime otpExpiry;
+	private String profileImageUrl;
 
-    private boolean isOnline = false;
-    
-//    @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "Asia/India", pattern = "dd/MM/yyyy HH:mm:ss")
-    private LocalDateTime lastSeen;
+	@Column(length = 255)
+	private String status; // Added for the Profile View
 
-    @Column(name = "CREATED_BY", length = 20)
-	private String createdBy;
+	private String currentOtp;
+	private LocalDateTime otpExpiry;
+	private boolean isVerified = false; // Added for login security
 
+	private boolean isOnline = false;
+	private LocalDateTime lastSeen;
+
+	// Auditing
 	@CreatedDate
 	@Column(name = "CREATED_DATE", nullable = false, updatable = false)
-//	@JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "Asia/India", pattern = "dd/MM/yyyy HH:mm:ss")
 	private LocalDateTime createdDate;
 
-	@Column(name = "MODIFIED_BY", length = 20)
-	private String modifiedBy;
-
 	@LastModifiedDate
-	@Column(name = "MODIFIED_DATE", insertable = false)
-//	@JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "Asia/India", pattern = "dd/MM/yyyy HH:mm:ss")
+	@Column(name = "MODIFIED_DATE")
 	private LocalDateTime modifiedDate;
-	
 }

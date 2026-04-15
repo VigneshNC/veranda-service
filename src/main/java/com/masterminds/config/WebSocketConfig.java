@@ -40,7 +40,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		// The URL your React app will use to connect
-		registry.addEndpoint("/ws").setAllowedOrigins("http://localhost:3000", "https://your-vercel-domain.com")
+		registry.addEndpoint("/ws").setAllowedOrigins("http://localhost:3000", "https://veranda-sigma.vercel.app")
 				.withSockJS(); // Fallback for browsers that don't support WebSockets
 	}
 

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.masterminds.dto.UserDTO;
 import com.masterminds.entity.User;
 import com.masterminds.repository.UserRepository;
 
@@ -29,6 +30,18 @@ public class UserService {
 
 	public User saveContact(User contactRequest) {
 		return userRepository.save(contactRequest);
+	}
+
+	public UserDTO getUser(UUID id) {
+		User user = userRepository.findById(id).orElseThrow();
+
+		UserDTO dto = new UserDTO();
+		dto.setId(user.getId());
+		dto.setDisplayName(user.getDisplayName());
+		dto.setPhoneNumber(user.getPhoneNumber());
+		dto.setStatus(user.getStatus());
+
+		return dto;
 	}
 
 }
