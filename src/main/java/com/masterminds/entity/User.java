@@ -1,6 +1,8 @@
 package com.masterminds.entity;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import org.hibernate.annotations.UuidGenerator;
@@ -13,6 +15,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -62,4 +67,12 @@ public class User {
 	@LastModifiedDate
 	@Column(name = "MODIFIED_DATE")
 	private LocalDateTime modifiedDate;
+
+	@ManyToMany
+	@JoinTable(name = "user_contacts", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "contact_id"))
+	private Set<User> contacts = new HashSet<>();
+
+	@ManyToMany
+	@JoinTable(name = "user_blocks", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "blocked_user_id"))
+	private Set<User> blockedUsers = new HashSet<>();
 }

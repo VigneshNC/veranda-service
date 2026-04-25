@@ -10,6 +10,6 @@ public class UserDTO {
 	private String displayName;
 	private String phoneNumber;
 	private String status;
-	private String avatarUrl;
+	private String profileImageUrl;
 	private boolean isOnline;
 }

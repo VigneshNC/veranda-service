@@ -3,7 +3,6 @@ package com.masterminds.controller;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.masterminds.dto.AuthResponseDTO;
+import com.masterminds.dto.OtpRequestDTO;
 import com.masterminds.service.AuthService;
 
 @RestController
@@ -34,20 +35,12 @@ public class AuthController {
 	}
 
 	@PostMapping("/verify-otp")
-    public ResponseEntity<?> verify(@RequestBody Map<String, String> request) {
-        try {
-            String phone = request.get("phoneNumber");
-            String otp = request.get("otp");
+    public ResponseEntity<AuthResponseDTO> verify(@RequestBody OtpRequestDTO request) {
 
             // Controller just calls the service
-            Map<String, Object> loginData = authService.verifyOtpAndLogin(phone, otp);
+            AuthResponseDTO loginData = authService.verifyOtp(request.getPhoneNumber(), request.getOtp());
 
             return ResponseEntity.ok(loginData);
-        } catch (RuntimeException e) {
-            // Controller handles the error response
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                 .body(Map.of("error", e.getMessage()));
-        }
 
 //		boolean isValid = authService.verifyOtp(phone, otp);
 //
@@ -56,5 +49,5 @@ public class AuthController {
 //		}
 //		return ResponseEntity.status(401).body(Map.of("message", "Invalid or expired OTP"));
 	}
-
+	
 }

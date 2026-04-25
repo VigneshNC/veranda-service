@@ -4,8 +4,11 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
+import com.masterminds.dto.AuthResponseDTO;
 import com.masterminds.entity.User;
 import com.masterminds.repository.UserRepository;
 
@@ -44,25 +47,6 @@ public class AuthService {
         return otp;
     }
 
-    // --- STEP 2: Verify OTP ---
-    public boolean verifyOtp(String phoneNumber, String userTypedOtp) {
-        return userRepository.findByPhoneNumber(phoneNumber)
-                .map(user -> {
-                    boolean isNotExpired = user.getOtpExpiry().isAfter(LocalDateTime.now());
-                    boolean matches = user.getCurrentOtp().equals(userTypedOtp);
-                    
-                    if (isNotExpired && matches) {
-                        // Clear OTP after successful login for security
-                        user.setCurrentOtp(null);
-                        user.setOtpExpiry(null);
-                        userRepository.save(user);
-                        return true;
-                    }
-                    return false;
-                })
-                .orElse(false);
-    }
-    
     public Map<String, Object> verifyOtpAndLogin(String phoneNumber, String userTypedOtp) {
         // 1. Business Logic: Hardcoded check (or DB check later)
         if (!"123456".equals(userTypedOtp)) {
@@ -82,6 +66,38 @@ public class AuthService {
             "userId", user.getId(),
             "displayName", user.getDisplayName() != null ? user.getDisplayName() : ""
         );
+    }
+    
+    @Transactional
+    public AuthResponseDTO verifyOtp(String phoneNumber, String otp) {
+        // 1. Fetch the user
+        User user = userRepository.findByPhoneNumber(phoneNumber)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        // 2. Business Logic: Check OTP and Expiry
+        if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OTP has expired");
+        }
+
+        if (!user.getCurrentOtp().equals(otp)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid OTP code");
+        }
+
+        // 3. Mark user as verified and online
+        user.setVerified(true);
+        user.setOnline(true);
+        user.setCurrentOtp(null); // Clear OTP so it can't be reused
+        userRepository.save(user);
+
+        // 4. Generate the JWT
+        String token = jwtService.generateToken(user.getPhoneNumber(), user.getId());
+
+        // 5. Return the response data
+        return AuthResponseDTO.builder()
+            .token(token)
+            .userId(user.getId())
+            .isNewUser(user.getDisplayName() == null) // Helps Frontend decide to show ProfileSetup
+            .build();
     }
 	
 }

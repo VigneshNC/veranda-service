@@ -46,6 +46,14 @@ public class Message {
 
 	@Column(columnDefinition = "TEXT", nullable = false)
 	private String content;
+	
+	// --- ADD THESE FIELDS ---
+    @Column(name = "attachment_url")
+    private String attachmentUrl;
+
+    @Column(name = "attachment_type")
+    private String attachmentType; // e.g., "IMAGE", "VIDEO", "DOCUMENT"
+    // ------------------------
 
 	@Enumerated(EnumType.STRING)
 	private MessageStatus status = MessageStatus.SENT;
