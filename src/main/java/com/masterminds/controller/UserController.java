@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.masterminds.dto.ChangeNumberRequest;
 import com.masterminds.dto.UserDTO;
 import com.masterminds.entity.User;
 import com.masterminds.service.UserService;
@@ -113,6 +115,25 @@ public class UserController {
 	public ResponseEntity<String> addContact(@PathVariable UUID userId, @PathVariable UUID contactId) {
 		userService.addContact(userId, contactId);
 		return ResponseEntity.ok("Contact added successfully");
+	}
+
+	@PatchMapping("/{userId}/security-notifications")
+	public ResponseEntity<Void> updateSecurityNotifications(@PathVariable UUID userId, @RequestParam boolean enabled) {
+		userService.updateSecurityNotifications(userId, enabled);
+		return ResponseEntity.ok().build();
+	}
+	
+	@PostMapping("/{userId}/change-number")
+	public ResponseEntity<?> changeNumber(
+	    @PathVariable UUID userId,
+	    @RequestBody ChangeNumberRequest request // Create this DTO with oldNumber & newNumber
+	) {
+	    try {
+	        userService.changePhoneNumber(userId, request.getOldNumber(), request.getNewNumber());
+	        return ResponseEntity.ok().build();
+	    } catch (RuntimeException e) {
+	        return ResponseEntity.badRequest().body(e.getMessage());
+	    }
 	}
 
 }

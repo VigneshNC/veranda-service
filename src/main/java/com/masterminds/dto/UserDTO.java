@@ -12,4 +12,5 @@ public class UserDTO {
 	private String status;
 	private String profileImageUrl;
 	private boolean isOnline;
+	private boolean securityNotifications;
 }

@@ -96,6 +96,7 @@ public class AuthService {
         return AuthResponseDTO.builder()
             .token(token)
             .userId(user.getId())
+            .phoneNumber(user.getPhoneNumber())
             .isNewUser(user.getDisplayName() == null) // Helps Frontend decide to show ProfileSetup
             .build();
     }

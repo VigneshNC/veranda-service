@@ -16,5 +16,6 @@ public class AuthResponseDTO {
 	
 	@JsonProperty("isNewUser")
 	private boolean isNewUser; // Crucial for your onboarding flow
+	private String phoneNumber;
 	
 }

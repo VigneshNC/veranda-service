@@ -23,26 +23,31 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	@Autowired
 	private JwtService jwtService; // Dynamically injected
-
+	
 	@Override
-	public void configureMessageBroker(MessageBrokerRegistry config) {
-		// /topic: for broadcasting (group chats)
-		// /queue: for 1-to-1 private messages
-		config.enableSimpleBroker("/topic", "/queue");
-
-		// /app: prefix for messages sent from React to Spring Boot
-		config.setApplicationDestinationPrefixes("/app");
-
-		// This makes sure private messages go to the right user
-		config.setUserDestinationPrefix("/user");
-	}
-
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+        // Prefixes for messages sent FROM server TO client
+        registry.enableSimpleBroker("/topic", "/queue", "/user");
+        
+        // Prefix for messages sent FROM client TO server
+        registry.setApplicationDestinationPrefixes("/app");
+        
+        // For private 1-on-1 messages
+        registry.setUserDestinationPrefix("/user");
+    }
+	
 	@Override
-	public void registerStompEndpoints(StompEndpointRegistry registry) {
-		// The URL your React app will use to connect
-		registry.addEndpoint("/ws").setAllowedOrigins("http://localhost:3000", "https://veranda-sigma.vercel.app")
-				.withSockJS(); // Fallback for browsers that don't support WebSockets
-	}
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // The URL where the frontend connects
+        registry.addEndpoint("/ws-veranda").setAllowedOriginPatterns("*").withSockJS();
+    }
+
+//	@Override
+//	public void registerStompEndpoints(StompEndpointRegistry registry) {
+//		// The URL your React app will use to connect
+//		registry.addEndpoint("/ws-veranda").setAllowedOrigins("http://192.168.18.72:3000", "https://veranda-sigma.vercel.app")
+//				.withSockJS(); // Fallback for browsers that don't support WebSockets
+//	}
 
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {

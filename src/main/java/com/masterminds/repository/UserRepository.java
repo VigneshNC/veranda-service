@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -33,5 +34,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 			+ "AND u.id != :myId "
 			+ "AND u.id NOT IN (SELECT c.id FROM User owner JOIN owner.contacts c WHERE owner.id = :myId)")
 	List<User> searchGlobalUsers(@Param("query") String query, @Param("myId") UUID myId);
+	
+	@Modifying
+	@Query(value = "DELETE FROM user_contacts WHERE contact_id = :userId", nativeQuery = true)
+	void removeFromAllContactLists(@Param("userId") UUID userId);
 
 }

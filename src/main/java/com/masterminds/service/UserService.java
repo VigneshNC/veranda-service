@@ -46,6 +46,9 @@ public class UserService {
 		dto.setDisplayName(user.getDisplayName());
 		dto.setPhoneNumber(user.getPhoneNumber());
 		dto.setStatus(user.getStatus());
+		dto.setProfileImageUrl(user.getProfileImageUrl());
+		dto.setOnline(user.isOnline());
+		dto.setSecurityNotifications(user.isSecurityNotifications());
 
 		return dto;
 	}
@@ -123,6 +126,66 @@ public class UserService {
 		if (query.length() < 3)
 			return new ArrayList<>(); // Don't search for tiny strings
 		return userRepository.searchGlobalUsers(query, myId);
+	}
+	
+	@Transactional
+	public void changePhoneNumber(UUID userId, String newPhoneNumber) {
+	    User user = userRepository.findById(userId)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
+
+	    // 1. Check if the new number is already taken
+	    if (userRepository.findByPhoneNumber(newPhoneNumber) != null) {
+	        throw new RuntimeException("New phone number is already registered with another account");
+	    }
+
+	    // 2. Update number
+	    user.setPhoneNumber(newPhoneNumber);
+	    userRepository.save(user);
+
+	    // Note: Since all relationships use the UUID 'id', they remain intact!
+	}
+	
+	public void changePhoneNumber(UUID userId, String oldNumber, String newNumber) {
+	    User user = userRepository.findById(userId)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
+
+	    // Verify the "Old" number actually belongs to this user session
+	    if (!user.getPhoneNumber().equals(oldNumber)) {
+	        throw new RuntimeException("The provided old number does not match our records.");
+	    }
+
+	    // Check if new number is already in use
+	    if (userRepository.findByPhoneNumber(newNumber).isPresent()) {
+	        throw new RuntimeException("The new phone number is already registered.");
+	    }
+
+	    user.setPhoneNumber(newNumber);
+	    userRepository.save(user);
+	}
+	
+	@Transactional
+	public void deleteUserAccount(UUID userId) {
+	    User user = userRepository.findById(userId)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
+
+	    // 1. Remove this user from other people's contact lists
+	    // This cleans up the 'user_contacts' join table entries where this user was the 'contact'
+	    userRepository.removeFromAllContactLists(userId);
+
+	    // 2. Remove from groups (If you have a Group entity)
+	    // groupRepository.removeUserFromAllGroups(userId);
+
+	    // 3. Delete the user (JPA will handle user_contacts/user_blocks 
+	    // where THIS user was the owner because of the @ManyToMany mappings)
+	    userRepository.delete(user);
+	}
+	
+	@Transactional
+	public void updateSecurityNotifications(UUID userId, boolean enabled) {
+	    User user = userRepository.findById(userId)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
+	    user.setSecurityNotifications(enabled);
+	    userRepository.save(user);
 	}
 
 }

@@ -3,7 +3,6 @@ package com.masterminds.entity;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import org.hibernate.annotations.UuidGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -32,7 +31,8 @@ import lombok.Setter;
 public class Message {
 
 	@Id
-	@UuidGenerator
+//	@UuidGenerator
+//	@GeneratedValue(generator = "UUID")
 	@Column(updatable = false, nullable = false)
 	private UUID id;
 
@@ -54,6 +54,9 @@ public class Message {
     @Column(name = "attachment_type")
     private String attachmentType; // e.g., "IMAGE", "VIDEO", "DOCUMENT"
     // ------------------------
+    
+    @Column(name = "file_name")
+    private String fileName;
 
 	@Enumerated(EnumType.STRING)
 	private MessageStatus status = MessageStatus.SENT;

@@ -75,4 +75,7 @@ public class User {
 	@ManyToMany
 	@JoinTable(name = "user_blocks", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "blocked_user_id"))
 	private Set<User> blockedUsers = new HashSet<>();
+	
+	@Column(nullable = false, columnDefinition = "boolean default false")
+	private boolean securityNotifications = false; // Default to false
 }
