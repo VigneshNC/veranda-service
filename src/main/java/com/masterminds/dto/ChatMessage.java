@@ -21,6 +21,9 @@ public class ChatMessage {
 	private LocalDateTime timestamp; // When was it sent?
 	private MessageType type; // CHAT, JOIN, or LEAVE
 	private String status;      // String to hold "SENT", "DELIVERED", or "READ"
+	private String attachmentUrl;   // The link to the file
+	private String attachmentType;  // "IMAGE", "VIDEO", "PDF", etc.
+	private String fileName;        // Original name of the file
 	
 	public enum MessageType {
 	    CHAT,
