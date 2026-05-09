@@ -29,6 +29,7 @@ public class ChatMessage {
 	    CHAT,
 	    READ_RECEIPT,
 	    TYPING,
-	    DELIVERED_RECEIPT
+	    DELIVERED_RECEIPT,
+	    MEDIA
 	}
 }

@@ -1,12 +1,22 @@
 package com.masterminds.service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.masterminds.dto.ChatMessage;
 import com.masterminds.dto.ChatMessage.MessageType;
@@ -17,6 +27,7 @@ import com.masterminds.repository.MessageRepository;
 import com.masterminds.repository.UserRepository;
 
 import jakarta.transaction.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class MessageService {
@@ -44,12 +55,10 @@ public class MessageService {
 				.orElseThrow(() -> new RuntimeException("Receiver not found"));
 
 		// 2. Map DTO to Entity and Save
-		Message messageEntity = Message.builder()
-				.id(chatMessage.getMessageId())
-				.sender(sender)
-				.receiver(receiver)
-				.status(MessageStatus.SENT)
-				.content(chatMessage.getContent()).createdDate(LocalDateTime.now()).build();
+		Message messageEntity = Message.builder().id(chatMessage.getMessageId()).sender(sender).receiver(receiver)
+				.status(MessageStatus.SENT).content(chatMessage.getContent())
+				.attachmentType(chatMessage.getAttachmentType()).attachmentUrl(chatMessage.getAttachmentUrl())
+				.createdDate(LocalDateTime.now()).build();
 
 		messageRepository.save(messageEntity);
 
@@ -99,28 +108,58 @@ public class MessageService {
 
 		messageRepository.markAsDelivered(payload.getMessageId());
 
-		ChatMessage deliveryNotification = ChatMessage.builder()
-				.type(MessageType.DELIVERED_RECEIPT) // Add this to your
-				.messageId(payload.getMessageId())																						// Enum
-				.senderId(senderId)
-				.recipientId(recipientId)
-				.status("DELIVERED").build();
+		ChatMessage deliveryNotification = ChatMessage.builder().type(MessageType.DELIVERED_RECEIPT) // Add this to your
+				.messageId(payload.getMessageId()) // Enum
+				.senderId(senderId).recipientId(recipientId).status("DELIVERED").build();
 
 		messagingTemplate.convertAndSendToUser(senderId.toString(), "/queue/messages", deliveryNotification);
 	}
-	
-	public void handleTyping(ChatMessage payload) {
-		ChatMessage typingNotification = ChatMessage.builder()
-	            .type(MessageType.TYPING)
-	            .senderId(payload.getSenderId()) // Who is typing
-	            .recipientId(payload.getRecipientId()) // Who should see it
-	            .content(payload.getContent()) // We'll use this for "true" or "false"
-	            .build();
 
-	    messagingTemplate.convertAndSendToUser(
-	        payload.getRecipientId().toString(), 
-	        "/queue/messages", 
-	        typingNotification
-	    );
+	public void handleTyping(ChatMessage payload) {
+		ChatMessage typingNotification = ChatMessage.builder().type(MessageType.TYPING).senderId(payload.getSenderId()) // Who
+																														// is
+																														// typing
+				.recipientId(payload.getRecipientId()) // Who should see it
+				.content(payload.getContent()) // We'll use this for "true" or "false"
+				.build();
+
+		messagingTemplate.convertAndSendToUser(payload.getRecipientId().toString(), "/queue/messages",
+				typingNotification);
+	}
+
+	public ResponseEntity<?> uploadFile(MultipartFile multipartFile) throws IOException {
+
+		Map<String, Object> finalPayload = new HashMap<>();
+		finalPayload.put("fileType", multipartFile.getContentType());
+		finalPayload.put("fileName", multipartFile.getOriginalFilename());
+		finalPayload.put("fileSize", multipartFile.getSize());
+		finalPayload.put("acl", "public-read");
+
+		// 3. Forward the complete request to UploadThing
+		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders utHeaders = new HttpHeaders();
+		utHeaders.set("x-uploadthing-api-key",
+				"sk_live_c8634138777b1d79aa7048f25c876b6ca0cdff2e1d731ec45fd0bc1857974a5f");
+		utHeaders.setContentType(MediaType.APPLICATION_JSON);
+		utHeaders.set("x-uploadthing-version", "7.7.4");
+		utHeaders.set("x-uploadthing-fe-package", "custom-sdk");
+
+		System.out.println("finalPayload: " + finalPayload);
+
+		HttpEntity<Map<String, Object>> entity = new HttpEntity<>(finalPayload, utHeaders);
+
+		try {
+			ResponseEntity<String> utResponse = restTemplate
+					.postForEntity("https://api.uploadthing.com/v7/prepareUpload", entity, String.class);
+
+			Map<String, String> utResponseStr = new ObjectMapper().readValue(utResponse.getBody(), Map.class);
+
+			return ResponseEntity.ok(utResponseStr);
+		} catch (HttpClientErrorException e) {
+			e.printStackTrace();
+			// Log the actual error body from UploadThing for easier debugging
+			System.out.println("UploadThing Error: " + e.getResponseBodyAsString());
+			return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+		}
 	}
 }
